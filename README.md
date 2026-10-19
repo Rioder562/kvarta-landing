@@ -23,3 +23,36 @@
 Так же я плохо поработал над структурой проекта, в последствии чего очень много времени тратится на поиски.
 
 Замеры Lighthouse лежат в корне.
+
+
+Я еще для примера создал две заявки, вот их вывод:
+[
+  {
+    "id": 2,
+    "name": "пашка",
+    "utm_source": "test_source",
+    "utm_medium": "cpc",
+    "utm_campaign": "test_campaign",
+    "utm_term": "coffee",
+    "utm_content": "ad_01",
+    "click_id": "",
+    "referrer": "",
+    "original_landing_page": "",
+    "landing_page": "",
+    "captured_at": "2026-10-19T15:20:19.309Z"
+  },
+  {
+    "id": 1,
+    "name": "Роман",
+    "utm_source": "",
+    "utm_medium": "",
+    "utm_campaign": "",
+    "utm_term": "",
+    "utm_content": "",
+    "click_id": "",
+    "referrer": "",
+    "original_landing_page": "",
+    "landing_page": "",
+    "captured_at": "2026-10-19T14:56:38.054Z"
+  }
+]
