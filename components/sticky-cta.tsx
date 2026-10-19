@@ -23,12 +23,14 @@ export default function StickyCta() {
 
   return (
     <div className={visible ? "sticky-cta is-visible" : "sticky-cta"}>
-      <span className="sticky-cta-label">
-        Подписка · {subscription.pricePerMonth} {subscription.currency}/мес
-      </span>
-      <a className="btn btn-primary" href="#zayavka">
-        Подать заявку
-      </a>
+      <div className="sticky-cta-inner">
+        <span className="sticky-cta-label">
+          Подписка · {subscription.pricePerMonth} {subscription.currency}/мес
+        </span>
+        <a className="btn btn-primary" href="#zayavka">
+          Подать заявку
+        </a>
+      </div>
     </div>
   );
 }

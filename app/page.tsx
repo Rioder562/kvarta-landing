@@ -15,7 +15,7 @@ export default function Home() {
       <Header />
       <div className="container">
         <div className="strip-line mono">
-          малое обжарочно в {workshop.city} · с {workshop.since} года
+          малое обжарочно в {workshop.city}е · с {workshop.since} года
         </div>
         <RoastTicket />
         <CoffeeList />

@@ -660,18 +660,21 @@ a:hover {
   right: 0;
   bottom: 0;
   z-index: 20;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   background: var(--ink);
   visibility: hidden;
 }
 
 .sticky-cta.is-visible {
   visibility: visible;
+}
+
+.sticky-cta-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .sticky-cta-label {

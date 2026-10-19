@@ -105,7 +105,7 @@ export default function OrderForm() {
 
       <p className="form-note" role="status">
         {prepared &&
-          `Заявка (${kindLabels[kind]}) подготовлена, но не сохранена: форма пока в режиме превью — приём заявок появится на следующем этапе.`}
+          `Заявка «${kindLabels[kind]}» подготовлена, но пока не сохранена. Мы свяжемся с вами, как только приём заявок откроется.`}
       </p>
     </section>
   );
