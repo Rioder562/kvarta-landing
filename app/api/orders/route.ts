@@ -4,6 +4,7 @@ import {
   DuplicateOrderError,
   type OrderKind,
 } from "@/lib/db";
+import { collectAttribution, type Attribution } from "@/lib/attribution";
 import { normalizeBelarusPhone } from "@/lib/phone";
 
 const KINDS: OrderKind[] = ["one-off", "subscription"];
@@ -14,6 +15,17 @@ function badField(field: string, msg: string) {
 
 function asString(v: unknown): string | null {
   return typeof v === "string" ? v : null;
+}
+
+// Клиент присылает словари UTM-параметров; принимает только JSON-объекты
+// со строковыми значениями, иначе — пустой словарь.
+function asStringRecord(v: unknown): Record<string, unknown> | null {
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return null;
+  const out: Record<string, unknown> = {};
+  for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+    if (typeof val === "string") out[k] = val;
+  }
+  return out;
 }
 
 export async function POST(req: NextRequest) {
@@ -57,8 +69,20 @@ export async function POST(req: NextRequest) {
   const selection = (asString(raw.selection) ?? "").trim().slice(0, 500);
   const comment = (asString(raw.comment) ?? "").trim().slice(0, 1000);
 
+  // Рекламная атрибуция из клиентских данных. Клиентские значения считаются
+  // не подтверждёнными и небезопасными: collectAttribution пропускает только
+  // whitelist и нормализует формат, всё остальное отбрасывается.
+  const attribution: Attribution = collectAttribution({
+    utm: asStringRecord(raw.utm) ?? {},
+    utm_original: asStringRecord(raw.utm_original) ?? {},
+    referrer: asString(raw.referrer) ?? "",
+    original_landing_page: asString(raw.original_landing_page) ?? "",
+    landing_page: asString(raw.landing_page) ?? "",
+    captured_at: asString(raw.captured_at) ?? "",
+  });
+
   try {
-    const id = createOrder({ name, phone, kind, selection, comment });
+    const id = createOrder({ name, phone, kind, selection, comment, attribution });
     return NextResponse.json({ ok: true, id }, { status: 201 });
   } catch (err) {
     if (err instanceof DuplicateOrderError) {

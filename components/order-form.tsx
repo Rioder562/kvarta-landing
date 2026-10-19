@@ -1,6 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { coffees } from "../data/coffees";
+import {
+  captureInitialLanding,
+  collectAttributionFromWindow,
+} from "../lib/attribution-client";
 
 type OrderKind = "one-off" | "subscription";
 
@@ -15,18 +20,63 @@ type Status =
   | { state: "ok"; id: number }
   | { state: "error"; message: string };
 
+const MAX_QTY = 20;
+
 export default function OrderForm() {
   const [kind, setKind] = useState<OrderKind>("one-off");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [selection, setSelection] = useState<Record<string, boolean>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState<Status>({ state: "idle" });
+
+  const submitting = status.state === "submitting";
+  const done = status.state === "ok";
+  const locked = submitting || done;
+
+  useEffect(() => {
+    captureInitialLanding();
+  }, []);
+
+  const selectionText = useMemo(() => {
+    const items = coffees.filter((c) => selection[c.id]);
+    if (items.length === 0) return "";
+    return items
+      .map((c) =>
+        kind === "one-off"
+          ? `${c.name} ${c.volume} × ${quantities[c.id] ?? 1}`
+          : c.name
+      )
+      .join(", ");
+  }, [selection, quantities, kind]);
+
+  function toggleItem(id: string) {
+    setSelection((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function changeQty(id: string, delta: number) {
+    setQuantities((prev) => {
+      const cur = prev[id] ?? 1;
+      const next = Math.min(MAX_QTY, Math.max(1, cur + delta));
+      return { ...prev, [id]: next };
+    });
+  }
+
+  function resetFields() {
+    setName("");
+    setPhone("");
+    setSelection({});
+    setQuantities({});
+    setComment("");
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (status.state === "submitting" || status.state === "ok") return;
     setStatus({ state: "submitting" });
     try {
+      const attribution = collectAttributionFromWindow();
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -34,33 +84,44 @@ export default function OrderForm() {
           name: name.trim(),
           phone: phone.trim(),
           kind,
-          selection: comment.trim(),
-          comment: "",
+          selection: selectionText,
+          comment: comment.trim(),
+          utm: attribution.utm,
+          utm_original: attribution.utm_original,
+          referrer: attribution.referrer,
+          original_landing_page: attribution.original_landing_page,
+          landing_page: attribution.landing_page,
+          captured_at: attribution.captured_at,
         }),
       });
-      const data = (await res.json()) as {
-        ok: boolean;
-        id?: number;
-        error?: string;
-      };
-      if (res.status === 201 && data.ok && typeof data.id === "number") {
+      let data: { ok: boolean; id?: number; error?: string } | null = null;
+      try {
+        data = (await res.json()) as {
+          ok: boolean;
+          id?: number;
+          error?: string;
+        };
+      } catch {
+        data = null;
+      }
+      if (
+        res.status === 201 &&
+        data &&
+        data.ok &&
+        typeof data.id === "number"
+      ) {
         setStatus({ state: "ok", id: data.id });
-        setName("");
-        setPhone("");
-        setComment("");
+        resetFields();
       } else {
         setStatus({
           state: "error",
-          message: data.error ?? "Не удалось отправить заявку",
+          message: data?.error ?? "Не удалось отправить заявку",
         });
       }
     } catch {
       setStatus({ state: "error", message: "Не удалось отправить заявку" });
     }
   }
-
-  const submitting = status.state === "submitting";
-  const done = status.state === "ok";
 
   return (
     <section id="zayavka" className="section" aria-labelledby="zayavka-title">
@@ -84,12 +145,71 @@ export default function OrderForm() {
                   checked={kind === k}
                   onChange={() => setKind(k)}
                   className="seg-input"
-                  disabled={submitting || done}
+                  disabled={locked}
                 />
                 {kindLabels[k]}
               </label>
             ))}
           </div>
+        </div>
+
+        <div className="field">
+          <span className="field-label" id="order-items-label">
+            {kind === "one-off"
+              ? "Товары (количество)"
+              : "Сорта для подписки"}
+          </span>
+          <div className="item-list" aria-labelledby="order-items-label">
+            {coffees.map((c) => {
+              const checked = !!selection[c.id];
+              return (
+                <div key={c.id} className={checked ? "item-row is-checked" : "item-row"}>
+                  <label className="item-check">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleItem(c.id)}
+                      disabled={locked}
+                      aria-label={c.name}
+                    />
+                    <span className="item-name">{c.name}</span>
+                    <span className="item-side">
+                      <span className="item-volume">{c.volume}</span>
+                      <span className="item-price">{c.price} BYN</span>
+                    </span>
+                  </label>
+                  {kind === "one-off" && checked && (
+                    <div className="qty">
+                      <button
+                        type="button"
+                        className="qty-btn"
+                        aria-label={`Меньше: ${c.name}`}
+                        onClick={() => changeQty(c.id, -1)}
+                        disabled={locked}
+                      >
+                        −
+                      </button>
+                      <span className="qty-value">
+                        {quantities[c.id] ?? 1}
+                      </span>
+                      <button
+                        type="button"
+                        className="qty-btn"
+                        aria-label={`Больше: ${c.name}`}
+                        onClick={() => changeQty(c.id, 1)}
+                        disabled={locked}
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {kind === "subscription" && (
+            <p className="field-hint">2 пачки × 250 г в месяц, 54 BYN/мес.</p>
+          )}
         </div>
 
         <div className="field">
@@ -104,7 +224,7 @@ export default function OrderForm() {
             onChange={(e) => setName(e.target.value)}
             required
             autoComplete="name"
-            disabled={submitting || done}
+            disabled={locked}
           />
         </div>
 
@@ -121,7 +241,7 @@ export default function OrderForm() {
             required
             autoComplete="tel"
             placeholder="+375"
-            disabled={submitting || done}
+            disabled={locked}
           />
         </div>
 
@@ -134,19 +254,15 @@ export default function OrderForm() {
             className="field-input field-textarea"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder={
-              kind === "one-off"
-                ? "Сорта и количество"
-                : "Сорта для подписки"
-            }
-            disabled={submitting || done}
+            placeholder="Состав, адрес, удобное время доставки"
+            disabled={locked}
           />
         </div>
 
         <button
           type="submit"
           className="btn btn-primary btn-block"
-          disabled={submitting || done}
+          disabled={locked}
         >
           {done
             ? "Заявка отправлена"

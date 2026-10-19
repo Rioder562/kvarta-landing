@@ -617,6 +617,106 @@ a:hover {
   font-size: 13px;
 }
 
+.item-list {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.item-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-row.is-checked {
+  background: var(--line);
+}
+
+.item-check {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.item-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-side {
+  display: flex;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.item-volume,
+.item-price {
+  white-space: nowrap;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 8px;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: var(--line);
+}
+
+.qty-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.qty-value {
+  min-width: 20px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.field-hint {
+  margin: 8px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
 .site-footer {
   margin-top: 8px;
   padding: 28px 0 20px;
