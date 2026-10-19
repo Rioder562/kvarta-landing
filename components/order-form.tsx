@@ -17,7 +17,6 @@ const kindLabels: Record<OrderKind, string> = {
 type Status =
   | { state: "idle" }
   | { state: "submitting" }
-  | { state: "ok"; id: number }
   | { state: "error"; message: string };
 
 const MAX_QTY = 20;
@@ -30,10 +29,10 @@ export default function OrderForm() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState<Status>({ state: "idle" });
+  const [doneId, setDoneId] = useState<number | null>(null);
 
   const submitting = status.state === "submitting";
-  const done = status.state === "ok";
-  const locked = submitting || done;
+  const locked = submitting;
 
   useEffect(() => {
     captureInitialLanding();
@@ -73,7 +72,7 @@ export default function OrderForm() {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (status.state === "submitting" || status.state === "ok") return;
+    if (submitting) return;
     setStatus({ state: "submitting" });
     try {
       const attribution = collectAttributionFromWindow();
@@ -110,15 +109,18 @@ export default function OrderForm() {
         data.ok &&
         typeof data.id === "number"
       ) {
-        setStatus({ state: "ok", id: data.id });
+        setDoneId(data.id);
+        setStatus({ state: "idle" });
         resetFields();
       } else {
+        setDoneId(null);
         setStatus({
           state: "error",
           message: data?.error ?? "Не удалось отправить заявку",
         });
       }
     } catch {
+      setDoneId(null);
       setStatus({ state: "error", message: "Не удалось отправить заявку" });
     }
   }
@@ -134,23 +136,26 @@ export default function OrderForm() {
       </p>
       <form className="order-form" onSubmit={handleSubmit}>
         <div className="field" role="radiogroup" aria-label="Тип заявки">
-          <span className="field-label">Тип заявки</span>
-          <div className="segment">
-            {(Object.keys(kindLabels) as OrderKind[]).map((k) => (
-              <label key={k} className={kind === k ? "seg is-active" : "seg"}>
-                <input
-                  type="radio"
-                  name="kind"
-                  value={k}
-                  checked={kind === k}
-                  onChange={() => setKind(k)}
-                  className="seg-input"
-                  disabled={locked}
-                />
-                {kindLabels[k]}
-              </label>
-            ))}
-          </div>
+         <span className="field-label">Тип заявки</span>
+         <div className="segment">
+          {(Object.keys(kindLabels) as OrderKind[]).map((k) => (
+           <label
+            key={k}
+            className={kind === k ? "seg is-active" : "seg"}
+           >
+            <input
+             type="radio"
+             name="kind"
+             value={k}
+             checked={kind === k}
+             onChange={() => setKind(k)}
+             className="seg-input"
+             disabled={locked}
+            />
+            {kindLabels[k]}
+           </label>
+          ))}
+         </div> 
         </div>
 
         <div className="field">
@@ -264,19 +269,19 @@ export default function OrderForm() {
           className="btn btn-primary btn-block"
           disabled={locked}
         >
-          {done
-            ? "Заявка отправлена"
-            : submitting
-              ? "Отправляем…"
+          {submitting
+            ? "Отправляем…"
+            : doneId !== null
+              ? "Заявка отправлена"
               : "Подать заявку"}
         </button>
       </form>
 
       <p className="form-note" role="status" aria-live="polite">
-        {done
-          ? `Заявка №${status.id} принята. Мы свяжемся с вами.`
-          : status.state === "error"
-            ? status.message
+        {status.state === "error"
+          ? status.message
+          : doneId !== null
+            ? `Заявка №${doneId} принята. Мы свяжемся с вами.`
             : "Свяжемся с вами по указанному телефону, чтобы уточнить детали."}
       </p>
     </section>

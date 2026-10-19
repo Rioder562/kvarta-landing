@@ -1,25 +1,146 @@
-node_modules/
-.next/
-out/
-dist/
-coverage/
+```gitignore
+# =========================
+# Dependencies
+# =========================
+/node_modules/
 
+# =========================
+# Next.js
+# =========================
+/.next/
+/out/
+/build/
+dist/
+
+# =========================
+# Environment variables and secrets
+# =========================
 .env
 .env.*
 !.env.example
-next-env.d
 
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# =========================
+# Logs and debugging
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Tests and coverage artifacts
+# =========================
+/coverage/
+/playwright-report/
+/test-results/
+/.nyc_output/
+
+# =========================
+# Local databases and backups
+# =========================
+*.sqlite-shm
+*.sqlite-wal
+*.db-shm
+*.db-wal
+*.bak
+*.backup
+*.dump
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.tmp/
+temp/
+tmp/
+
+# =========================
+# Operating system
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Trashes/
+
+# =========================
+# IDEs and editors
+# =========================
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Local AI assistant data
+# =========================
+.cptr/
+.cursor/
+.claude/
+.continue/
+
+# =========================
+# Local environment and tooling
+# =========================
+.vercel/
+.turbo/
+.eslintcache
+.stylelintcache
+*.pid
+*.seed
+
+# =========================
+# Generated reports and exports
+# =========================
+*.pdf
+*.docx
+*.xlsx
+*.zip
+*.rar
+*.7z
+
+# =========================
+# Local notes and scratch files
+# =========================
+TODO.local.md
+NOTES.local.md
+scratch/
+playground/
+# Local databases
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite-shm
+*.sqlite-wal
 *.db-shm
 *.db-wal
 
-server.log
-server.err.log
-server.pid
-run-dev-detached.cmd
-
-.DS_Store
-Thumbs.db
-.cptr
+# Database backups
+*.bak
+*.backup
+*.dump
+```

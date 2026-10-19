@@ -577,27 +577,29 @@ a:hover {
   justify-content: center;
   min-height: 48px;
   padding: 0 8px;
+  background: #fff;
   border-right: 1px dashed var(--line);
   font-size: 14px;
   cursor: pointer;
   transition: background-color 150ms, color 150ms;
 }
 
+.seg.is-active {
+  background: #000;
+  color: #fff;
+}
+
+.seg:not(.is-active) {
+  background: #fff;
+  color: #000;
+}
+
 .seg:last-child {
   border-right: none;
 }
 
-.seg:hover:not(.is-active) {
-  background: var(--line);
-}
-
-.seg.is-active {
-  background: var(--ink);
-  color: var(--paper);
-}
-
 .seg:focus-within {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--ink);
   outline-offset: -2px;
 }
 
