@@ -12,6 +12,13 @@ next-env.d
 *.db
 *.sqlite
 *.sqlite3
+*.db-shm
+*.db-wal
+
+server.log
+server.err.log
+server.pid
+run-dev-detached.cmd
 
 .DS_Store
 Thumbs.db

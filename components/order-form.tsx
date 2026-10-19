@@ -9,17 +9,58 @@ const kindLabels: Record<OrderKind, string> = {
   subscription: "Подписка",
 };
 
+type Status =
+  | { state: "idle" }
+  | { state: "submitting" }
+  | { state: "ok"; id: number }
+  | { state: "error"; message: string };
+
 export default function OrderForm() {
   const [kind, setKind] = useState<OrderKind>("one-off");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [comment, setComment] = useState("");
-  const [prepared, setPrepared] = useState(false);
+  const [status, setStatus] = useState<Status>({ state: "idle" });
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setPrepared(true);
+    if (status.state === "submitting" || status.state === "ok") return;
+    setStatus({ state: "submitting" });
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          kind,
+          selection: comment.trim(),
+          comment: "",
+        }),
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        id?: number;
+        error?: string;
+      };
+      if (res.status === 201 && data.ok && typeof data.id === "number") {
+        setStatus({ state: "ok", id: data.id });
+        setName("");
+        setPhone("");
+        setComment("");
+      } else {
+        setStatus({
+          state: "error",
+          message: data.error ?? "Не удалось отправить заявку",
+        });
+      }
+    } catch {
+      setStatus({ state: "error", message: "Не удалось отправить заявку" });
+    }
   }
+
+  const submitting = status.state === "submitting";
+  const done = status.state === "ok";
 
   return (
     <section id="zayavka" className="section" aria-labelledby="zayavka-title">
@@ -43,6 +84,7 @@ export default function OrderForm() {
                   checked={kind === k}
                   onChange={() => setKind(k)}
                   className="seg-input"
+                  disabled={submitting || done}
                 />
                 {kindLabels[k]}
               </label>
@@ -62,6 +104,7 @@ export default function OrderForm() {
             onChange={(e) => setName(e.target.value)}
             required
             autoComplete="name"
+            disabled={submitting || done}
           />
         </div>
 
@@ -78,6 +121,7 @@ export default function OrderForm() {
             required
             autoComplete="tel"
             placeholder="+375"
+            disabled={submitting || done}
           />
         </div>
 
@@ -95,17 +139,29 @@ export default function OrderForm() {
                 ? "Сорта и количество"
                 : "Сорта для подписки"
             }
+            disabled={submitting || done}
           />
         </div>
 
-        <button type="submit" className="btn btn-primary btn-block">
-          Подготовить заявку
+        <button
+          type="submit"
+          className="btn btn-primary btn-block"
+          disabled={submitting || done}
+        >
+          {done
+            ? "Заявка отправлена"
+            : submitting
+              ? "Отправляем…"
+              : "Подать заявку"}
         </button>
       </form>
 
-      <p className="form-note" role="status">
-        {prepared &&
-          `Заявка «${kindLabels[kind]}» подготовлена, но пока не сохранена. Мы свяжемся с вами, как только приём заявок откроется.`}
+      <p className="form-note" role="status" aria-live="polite">
+        {done
+          ? `Заявка №${status.id} принята. Мы свяжемся с вами.`
+          : status.state === "error"
+            ? status.message
+            : "Свяжемся с вами по указанному телефону, чтобы уточнить детали."}
       </p>
     </section>
   );
